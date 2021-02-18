@@ -35,17 +35,28 @@ var listener = app.listen(process.env.PORT, function () {
 });
 
 
-app.get('/api/timestamp/:time', (req, res) => {
+app.get('/api/timestamp/:time?', (req, res) => {
   //console.log(req.params.time);
-  let num = Number(req.params.time);
   var date;
-  if (Number.isNaN(num)) {
-    date = new Date(req.params.time);
+  if (!req.params.time) {
+    date = new Date();
   } else {
-    date = new Date(num);
+    let num = Number(req.params.time);
+    if (Number.isNaN(num)) {
+      date = new Date(req.params.time);
+    } else {
+      date = new Date(num);
+    }
   }
-  res.json({
-    unix: date.getTime(),
-    utc: date.toUTCString()
-  });
+
+  if (Number.isNaN(date.getTime())) {
+    res.json({
+      error: "Invalid Date"
+    });
+  } else {
+    res.json({
+      unix: date.getTime(),
+      utc: date.toUTCString()
+    });
+  }
 });
