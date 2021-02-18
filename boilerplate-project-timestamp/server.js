@@ -1,6 +1,9 @@
 // server.js
 // where your node app starts
 
+// enable dotenv to allow Heroku to change port no.
+require('dotenv').config();
+
 // init project
 var express = require('express');
 var app = express();
