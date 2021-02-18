@@ -33,3 +33,19 @@ app.get("/api/hello", function (req, res) {
 var listener = app.listen(process.env.PORT, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
+
+
+app.get('/api/timestamp/:time', (req, res) => {
+  //console.log(req.params.time);
+  let num = Number(req.params.time);
+  var date;
+  if (Number.isNaN(num)) {
+    date = new Date(req.params.time);
+  } else {
+    date = new Date(num);
+  }
+  res.json({
+    unix: date.getTime(),
+    utc: date.toUTCString()
+  });
+});
