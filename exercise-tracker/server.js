@@ -13,25 +13,28 @@ app.get('/', (req, res) => {
 app.use(express.urlencoded({extended: false}));
 
 mongoose.connect(process.env.MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
+const exerciseSchema = new mongoose.Schema({
+  description: {
+    type: String,
+    require: true
+  },
+  duration: {
+    type: Number,
+    require: true
+  },
+  date: Date
+});
 const User = mongoose.model('User', new mongoose.Schema({
   username: {
     type: String,
     require: true,
     unique: true
   },
-  exercises: [{
-    description: {
-      type: String,
-      require: true
-    },
-    duration: {
-      type: Number,
-      require: true
-    },
-    date: Date
-  }]
+  exercises: [exerciseSchema]
 }));
 
+
+// api to create new user
 app.post('/api/exercise/new-user', (req, res) => {
   console.log(req.body.username);
   uname = req.body.username;
@@ -59,7 +62,44 @@ app.post('/api/exercise/new-user', (req, res) => {
         }
 
         else {
-          res.send(doc);
+          res.send(doc.value);
+        }
+      }
+    );
+  }
+});
+
+// api to add exercises
+app.post('/api/exercise/add', (req, res) => {
+  var date = !req.body.date ? new Date() : new Date(req.body.date);
+
+  if (Number.isNaN(date.getTime())) {res.send("Invalid date");}
+  else if (!req.body.userId.match(/^[0-9a-fA-F]{24}$/)) {res.send('Invalid userId');}
+  else if (req.body.description === "") {res.send("Path `description` is required.");}
+  else if (req.body.duration === "") {res.send("Path `duration` is required.");}
+  else if (isNaN(req.body.duration)) {res.send('Invalid duration');}
+  
+  else {
+    var userId = mongoose.Types.ObjectId(req.body.userId);
+    var obj = {
+      description: req.body.description,
+      duration: new Number(req.body.duration),
+      date: date
+    };    
+    User.findByIdAndUpdate(
+      userId,
+      {$push: {
+        exercises: obj
+      }},
+      {
+        fields: 'username _id', // project these fields
+        new: true, // return updated object
+        runValidators: true, // validify data
+      },
+      (err, doc) => {
+        if (err) {res.send({error: err});}
+        else if (doc) {
+          res.send(Object.assign(doc.toObject(), obj, {date: date.toDateString()}));
         }
       }
     );
