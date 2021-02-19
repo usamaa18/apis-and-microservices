@@ -99,6 +99,7 @@ app.post('/api/exercise/add', (req, res) => {
       },
       (err, doc) => {
         if (err) {res.send({error: err});}
+        else if (doc == null) {res.send("Unknown userId");}
         else if (doc) {
           res.send(Object.assign(doc.toObject(), obj, {date: date.toDateString()}));
         }
@@ -115,8 +116,9 @@ app.get('/api/exercise/users', (req, res) => {
   })
 });
 
-app.get('/api/exercise/log?:userId&:from?&:to?&:limit?', (req, res) => {
-
+// api to get exercise logs of given user (using query string)
+app.get('/api/exercise/log', (req, res) => {
+  // if (req.query.userId) {}
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
