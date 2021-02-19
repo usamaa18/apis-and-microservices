@@ -71,6 +71,7 @@ app.post('/api/exercise/new-user', (req, res) => {
 
 // api to add exercises
 app.post('/api/exercise/add', (req, res) => {
+  // set date object based on whether user passed any date
   var date = !req.body.date ? new Date() : new Date(req.body.date);
 
   if (Number.isNaN(date.getTime())) {res.send("Invalid date");}
@@ -78,7 +79,7 @@ app.post('/api/exercise/add', (req, res) => {
   else if (req.body.description === "") {res.send("Path `description` is required.");}
   else if (req.body.duration === "") {res.send("Path `duration` is required.");}
   else if (isNaN(req.body.duration)) {res.send('Invalid duration');}
-  
+
   else {
     var userId = mongoose.Types.ObjectId(req.body.userId);
     var obj = {
@@ -104,6 +105,18 @@ app.post('/api/exercise/add', (req, res) => {
       }
     );
   }
+});
+
+// api to list all users
+app.get('/api/exercise/users', (req, res) => {
+  User.find({}, '_id username' , (err, doc) => {
+    if (err) {res.send({error: err});}
+    else {res.send(doc);}
+  })
+});
+
+app.get('/api/exercise/log?:userId&:from?&:to?&:limit?', (req, res) => {
+
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
