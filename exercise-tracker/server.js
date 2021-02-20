@@ -132,10 +132,19 @@ app.get('/api/exercise/log', (req, res) => {
     // ignore __v and log._id
     let query = User.findById(mongoose.Types.ObjectId(req.query.userId), '-__v -log._id');
 
+    // used to append to doc before sending to user
+    var dateRange = {};
+
     // conditional date range
     query.elemMatch('log', function (elem) {
-      if (req.query.from) {elem.where('date').gte(new Date(req.query.from));}
-      if (req.query.to) {elem.where('date').lte(new Date(req.query.to));}      
+      if (req.query.from) {
+        elem.where('date').gte(new Date(req.query.from));
+        dateRange['from'] = req.query.from;
+      }
+      if (req.query.to) {
+        elem.where('date').lte(new Date(req.query.to));
+        dateRange['to'] = req.query.to;
+      }      
     });
 
     // conditional limit
@@ -147,7 +156,7 @@ app.get('/api/exercise/log', (req, res) => {
       else if (doc == null) {res.send("Unknown userId");}
       else {
         // add count and send
-        res.send(Object.assign(doc.toObject(), {count: doc.log.length}));
+        res.send(Object.assign(doc.toObject(), {count: doc.log.length}, dateRange));
       }
     });
   }
