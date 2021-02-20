@@ -137,13 +137,16 @@ app.get('/api/exercise/log', (req, res) => {
 
     // conditional date range
     query.elemMatch('log', function (elem) {
+      var tempDate;
       if (req.query.from) {
-        elem.where('date').gte(new Date(req.query.from));
-        dateRange['from'] = req.query.from;
+        tempDate = new Date(req.query.from);
+        elem.where('date').gte(tempDate);
+        dateRange['from'] = tempDate.toDateString();
       }
       if (req.query.to) {
-        elem.where('date').lte(new Date(req.query.to));
-        dateRange['to'] = req.query.to;
+        tempDate = new Date(req.query.to);
+        elem.where('date').lte(tempDate);
+        dateRange['to'] = tempDate.toDateString();
       }      
     });
 
@@ -155,8 +158,11 @@ app.get('/api/exercise/log', (req, res) => {
       if (err) {res.send({error: err});}
       else if (doc == null) {res.send("Unknown userId");}
       else {
+        let docJson = doc.toObject();
+        // format date of each exercise
+        docJson.log.forEach(val => {val["date"] = val['date'].toDateString();});
         // add count and send
-        res.send(Object.assign(doc.toObject(), {count: doc.log.length}, dateRange));
+        res.send(Object.assign(docJson, {count: docJson.log.length}, dateRange));
       }
     });
   }
