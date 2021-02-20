@@ -30,7 +30,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     require: true,
     unique: true
   },
-  exercises: [exerciseSchema]
+  log: [exerciseSchema]
 }));
 
 
@@ -69,7 +69,7 @@ app.post('/api/exercise/new-user', (req, res) => {
   }
 });
 
-// api to add exercises
+// api to add log
 app.post('/api/exercise/add', (req, res) => {
   // set date object based on whether user passed any date
   var date = !req.body.date ? new Date() : new Date(req.body.date);
@@ -90,7 +90,7 @@ app.post('/api/exercise/add', (req, res) => {
     User.findByIdAndUpdate(
       userId,
       {$push: {
-        exercises: obj
+        log: obj
       }},
       {
         fields: 'username _id', // project these fields
@@ -116,9 +116,41 @@ app.get('/api/exercise/users', (req, res) => {
   })
 });
 
+function isValidDateString(dateString) {
+  let date = new Date(dateString);
+  return Number.isNaN(date.getTime()) ? false : true;
+}
+
 // api to get exercise logs of given user (using query string)
 app.get('/api/exercise/log', (req, res) => {
-  // if (req.query.userId) {}
+  if (!req.query.userId) {res.send("Query parameter 'userId' is required");}
+  else if(!req.query.userId.match(/^[0-9a-fA-F]{24}$/)) {res.send("Invalid 'userId'");}
+  else if (req.query.from && !isValidDateString(req.query.from)) {res.send("Invalid 'from' date");}
+  else if (req.query.to && !isValidDateString(req.query.to)) {res.send("Invalid 'to' date");}
+  else if (req.query.limit && isNaN(req.query.limit)) {res.send("Invalid 'limit'");}
+  else {
+    // ignore __v and log._id
+    let query = User.findById(mongoose.Types.ObjectId(req.query.userId), '-__v -log._id');
+
+    // conditional date range
+    query.elemMatch('log', function (elem) {
+      if (req.query.from) {elem.where('date').gte(new Date(req.query.from));}
+      if (req.query.to) {elem.where('date').lte(new Date(req.query.to));}      
+    });
+
+    // conditional limit
+    if (req.query.limit) {
+      query.limit(new Number(req.query.limit));
+    }
+    query.exec((err, doc) => {
+      if (err) {res.send({error: err});}
+      else if (doc == null) {res.send("Unknown userId");}
+      else {
+        // add count and send
+        res.send(Object.assign(doc.toObject(), {count: doc.log.length}));
+      }
+    });
+  }
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
