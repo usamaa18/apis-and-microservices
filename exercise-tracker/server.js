@@ -125,9 +125,9 @@ function isValidDateString(dateString) {
 app.get('/api/exercise/log', (req, res) => {
   if (!req.query.userId) {res.send("Query parameter 'userId' is required");}
   else if(!req.query.userId.match(/^[0-9a-fA-F]{24}$/)) {res.send("Invalid 'userId'");}
-  else if (req.query.from && !isValidDateString(req.query.from)) {res.send("Invalid 'from' date");}
-  else if (req.query.to && !isValidDateString(req.query.to)) {res.send("Invalid 'to' date");}
-  else if (req.query.limit && isNaN(req.query.limit)) {res.send("Invalid 'limit'");}
+  // else if (req.query.from && !isValidDateString(req.query.from)) {res.send("Invalid 'from' date");}
+  // else if (req.query.to && !isValidDateString(req.query.to)) {res.send("Invalid 'to' date");}
+  // else if (req.query.limit && isNaN(req.query.limit)) {res.send("Invalid 'limit'");}
   else {
     // ignore __v and log._id
     let query = User.findById(mongoose.Types.ObjectId(req.query.userId), '-__v -log._id');
@@ -138,12 +138,12 @@ app.get('/api/exercise/log', (req, res) => {
     // conditional date range
     query.elemMatch('log', function (elem) {
       var tempDate;
-      if (req.query.from) {
+      if (req.query.from && isValidDateString(req.query.from)) {
         tempDate = new Date(req.query.from);
         elem.where('date').gte(tempDate);
         dateRange['from'] = tempDate.toDateString();
       }
-      if (req.query.to) {
+      if (req.query.to && isValidDateString(req.query.to)) {
         tempDate = new Date(req.query.to);
         elem.where('date').lte(tempDate);
         dateRange['to'] = tempDate.toDateString();
