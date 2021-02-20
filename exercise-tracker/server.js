@@ -151,7 +151,7 @@ app.get('/api/exercise/log', (req, res) => {
     });
 
     // conditional limit
-    if (req.query.limit) {
+    if (req.query.limit && !isNaN(req.query.limit)) {
       query.limit(new Number(req.query.limit));
     }
     query.exec((err, doc) => {
