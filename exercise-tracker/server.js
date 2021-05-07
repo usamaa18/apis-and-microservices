@@ -136,21 +136,16 @@ app.get('/api/users/:_id/logs', (req, res) => {
     // Reason: https://docs.mongodb.com/manual/reference/operator/projection/slice/#path-collision---slice-of-an-array-and-embedded-fields
     let query = User.findById(mongoose.Types.ObjectId(req.params._id), '-__v -log._id');
 
-    // used to append to doc before sending to user
-    var dateRange = {};
-
     // conditional date range
     query.elemMatch('log', function (elem) {
       var tempDate;
       if (req.query.from && isValidDateString(req.query.from)) {
         tempDate = new Date(req.query.from);
         elem.where('date').gte(tempDate);
-        dateRange['from'] = tempDate.toDateString();
       }
       if (req.query.to && isValidDateString(req.query.to)) {
         tempDate = new Date(req.query.to);
         elem.where('date').lte(tempDate);
-        dateRange['to'] = tempDate.toDateString();
       }      
     });
 
@@ -168,7 +163,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
         // format date of each exercise
         docJson.log.forEach(val => {val["date"] = val['date'].toDateString();});
         // add count and send
-        res.send(Object.assign(docJson, {count: docJson.log.length}, dateRange));
+        res.send(Object.assign(docJson, {count: docJson.log.length}));
       }
     });
   }
