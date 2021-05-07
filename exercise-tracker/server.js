@@ -35,7 +35,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 
 // api to create new user
-app.post('/api/exercise/new-user', (req, res) => {
+app.post('/api/users', (req, res) => {
   console.log(req.body.username);
   uname = req.body.username;
   if (uname === "") {
@@ -70,7 +70,7 @@ app.post('/api/exercise/new-user', (req, res) => {
 });
 
 // api to add log
-app.post('/api/exercise/add', (req, res) => {
+app.post('/api/users/:_id/exercises', (req, res) => {
   // set date object based on whether user passed any date
   var date = !req.body.date ? new Date() : new Date(req.body.date);
 
@@ -109,7 +109,7 @@ app.post('/api/exercise/add', (req, res) => {
 });
 
 // api to list all users
-app.get('/api/exercise/users', (req, res) => {
+app.get('/api/users', (req, res) => {
   User.find({}, '_id username' , (err, doc) => {
     if (err) {res.send({error: err});}
     else {res.send(doc);}
@@ -122,16 +122,16 @@ function isValidDateString(dateString) {
 }
 
 // api to get exercise logs of given user (using query string)
-app.get('/api/exercise/log', (req, res) => {
-  if (!req.query.userId) {res.send("Query parameter 'userId' is required");}
-  else if(!req.query.userId.match(/^[0-9a-fA-F]{24}$/)) {res.send("Invalid 'userId'");}
+app.get('/api/users/:_id/logs', (req, res) => {
+  if (!req.params._id) {res.send("Query parameter 'userId' is required");}
+  else if(!req.params._id.match(/^[0-9a-fA-F]{24}$/)) {res.send("Invalid 'userId'");}
   // else if (req.query.from && !isValidDateString(req.query.from)) {res.send("Invalid 'from' date");}
   // else if (req.query.to && !isValidDateString(req.query.to)) {res.send("Invalid 'to' date");}
   // else if (req.query.limit && isNaN(req.query.limit)) {res.send("Invalid 'limit'");}
   else {
     // Using $slice does not seem to work.
     // Reason: https://docs.mongodb.com/manual/reference/operator/projection/slice/#path-collision---slice-of-an-array-and-embedded-fields
-    let query = User.findById(mongoose.Types.ObjectId(req.query.userId), '-__v -log._id');
+    let query = User.findById(mongoose.Types.ObjectId(req.params._id), '-__v -log._id');
 
     // used to append to doc before sending to user
     var dateRange = {};
