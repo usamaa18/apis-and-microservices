@@ -70,10 +70,6 @@ app.post('/api/users', (req, res) => {
 
 // api to add log
 app.post('/api/users/:_id/exercises', (req, res) => {
-  // should technically never happen (unless client side html code is altered)
-  if (req.body[':_id'] != req.params._id) {
-    res.send("req.body[':_id'] and req.params._id do not match.");
-  }
   // set date object based on whether user passed any date
   var date = !req.body.date ? new Date() : new Date(req.body.date);
 
