@@ -36,7 +36,6 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 // api to create new user
 app.post('/api/users', (req, res) => {
-  console.log(req.body.username);
   uname = req.body.username;
   if (uname === "") {
     res.send("Path `username` is required.")
@@ -71,17 +70,21 @@ app.post('/api/users', (req, res) => {
 
 // api to add log
 app.post('/api/users/:_id/exercises', (req, res) => {
+  // should technically never happen (unless client side html code is altered)
+  if (req.body[':_id'] != req.params._id) {
+    res.send("req.body[':_id'] and req.params._id do not match.");
+  }
   // set date object based on whether user passed any date
   var date = !req.body.date ? new Date() : new Date(req.body.date);
 
   if (Number.isNaN(date.getTime())) {res.send("Invalid date");}
-  else if (!req.body.userId.match(/^[0-9a-fA-F]{24}$/)) {res.send('Invalid userId');}
+  else if (!req.params._id.match(/^[0-9a-fA-F]{24}$/)) {res.send('Invalid userId');}
   else if (req.body.description === "") {res.send("Path `description` is required.");}
   else if (req.body.duration === "") {res.send("Path `duration` is required.");}
   else if (isNaN(req.body.duration)) {res.send('Invalid duration');}
 
   else {
-    var userId = mongoose.Types.ObjectId(req.body.userId);
+    var userId = mongoose.Types.ObjectId(req.params._id);
     var obj = {
       description: req.body.description,
       duration: new Number(req.body.duration),
@@ -154,7 +157,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
 
     query.exec((err, doc) => {
       if (err) {res.send({error: err});}
-      else if (doc == null) {res.send("Unknown userId");}
+      else if (doc == null) {res.send("Not found!");}
       else {
         let docJson = doc.toObject();
         // conditional limit
