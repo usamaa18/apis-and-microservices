@@ -129,7 +129,8 @@ app.get('/api/exercise/log', (req, res) => {
   // else if (req.query.to && !isValidDateString(req.query.to)) {res.send("Invalid 'to' date");}
   // else if (req.query.limit && isNaN(req.query.limit)) {res.send("Invalid 'limit'");}
   else {
-    // ignore __v and log._id
+    // Using $slice does not seem to work.
+    // Reason: https://docs.mongodb.com/manual/reference/operator/projection/slice/#path-collision---slice-of-an-array-and-embedded-fields
     let query = User.findById(mongoose.Types.ObjectId(req.query.userId), '-__v -log._id');
 
     // used to append to doc before sending to user
@@ -150,15 +151,17 @@ app.get('/api/exercise/log', (req, res) => {
       }      
     });
 
-    // conditional limit
-    if (req.query.limit && !isNaN(req.query.limit)) {
-      query.limit(new Number(req.query.limit));
-    }
+
     query.exec((err, doc) => {
       if (err) {res.send({error: err});}
       else if (doc == null) {res.send("Unknown userId");}
       else {
         let docJson = doc.toObject();
+        // conditional limit
+        // not the best implementation as all exercises are downloaded anyway
+        if (req.query.limit && !isNaN(req.query.limit)) {
+          docJson.log = docJson.log.slice(0, new Number(req.query.limit));
+        }
         // format date of each exercise
         docJson.log.forEach(val => {val["date"] = val['date'].toDateString();});
         // add count and send
